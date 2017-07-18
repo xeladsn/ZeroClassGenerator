@@ -3,6 +3,7 @@
 
 
 FenPrincipale::FenPrincipale()
+// Constructeur de la fenetre principale
 {
 // Création des layouts et des widgets
 
@@ -106,10 +107,13 @@ void FenPrincipale::ecrireHeaderGuard(QString nom)
 }
 
 void FenPrincipale::addAttributInList()
+// slot personnalisé pour que l'utilisateur ajoute un attribut à la liste d'attributs
 {
     QString attributText = QInputDialog::getText(this, tr("Insert attribut"),
            tr("Input text for the new attribut:"));
-    attributs->addItem(attributText);
+    QString attributType = QInputDialog::getText(this, tr("Insert the type of the attribut"),
+                                                 tr("Input text for the type of the new attribut:"));
+    attributs->addItem(attributType + " " + attributText);
 }
 
 void FenPrincipale::deleteAttributInList()
@@ -120,6 +124,8 @@ void FenPrincipale::deleteAttributInList()
 QString FenPrincipale::genererCodeHeader()
 // génère une QString contenant le code du .h
 {
+    QString const indentation("    ");
+
     // On vérifie que le nom de la classe n'est pas vide, sinon on arrête
     if (nom->text().isEmpty())
     {
@@ -166,21 +172,24 @@ QString FenPrincipale::genererCodeHeader()
     {
         texteDestructeur = QString("~"+nom->text()+"();");
     }
+    code.append("{\n");
+    code.append("public: \n" + indentation + texteConstructeur + "\n");
+    code.append(indentation + texteDestructeur + "\n");
+    code.append("\n");
 
-    code.append("{\n   public: \n      " + texteConstructeur + "\n");
-    code.append("      " + texteDestructeur+"\n");
+    code.append("protected:\n");
     code.append("\n");
-    code.append("   protected:\n");
-    code.append("\n");
-    code.append("   private:\n");
-    code.append("      ");
-    // Ajoute des attributs de la liste dans le code généré
+
+    code.append("private:\n");
+    // ajout des attributs de la liste d'attributs dans le code généré
     for (int compteur(0) ; compteur < attributs->count() ; compteur++)
         {
-            code.append(attributs->item(compteur)->text()+";\n");
-            code.append("      ");
+            QString typeAttribut(attributs->item(compteur)->text().split(" ").at(0));
+            QString nomAttribut(attributs->item(compteur)->text().split(" ").at(1));
+            code.append(indentation + typeAttribut + " " + "*" + nomAttribut + ";\n");
         }
-    code.append("\n\n");
+    code.append("\n");
+    code.append("};");
 
     if (protections->isChecked())
     {
@@ -192,7 +201,10 @@ QString FenPrincipale::genererCodeHeader()
 
 QString FenPrincipale::genererCodeCpp()
 // génère une QString contenant le code du .cpp
+
 {
+    QString const indentation("    ");
+
     QString code;
     // Génération du code à l'aide des informations rentrées par l'utilisateur
     // bloc des commentaires
@@ -204,16 +216,20 @@ QString FenPrincipale::genererCodeCpp()
         code.append("Rôle :\n" + role->toPlainText() + "\n");
         code.append("*/\n\n");
     }
-    // bloc relatif à la classe
+    // bloc d'inclusion du header
     code.append("#include<"+nom->text()+".h>\n\n");
-    code.append("class" + nom->text() + ": public " + classeMere->text() + "\n{\n    ");
-    code.append("public:\n        ");
-    code.append(nom->text()+"();\n    ");
-    code.append("private:\n");
+
+    // bloc du constructeur
+    code.append(nom->text() + "::" + nom->text() + " : public " + classeMere->text() + "\n{");
+    code.append("\n");
+    // ajout des attributs de la liste d'attributs dans le corps du constructeur
     for (int compteur(0) ; compteur < attributs->count() ; compteur++)
-    {
-        code.append(attributs->item(compteur)->text()+";\n        ");
-    }
+        {
+            QString typeAttribut(attributs->item(compteur)->text().split(" ").at(0));
+            QString nomAttribut(attributs->item(compteur)->text().split(" ").at(1));
+            code.append(indentation + nomAttribut + " = " + "new " + typeAttribut + ";\n");
+        }
+    code.append("\n");
     code.append("};");
 
     return code;
