@@ -36,8 +36,9 @@ FenPrincipale::FenPrincipale()
     protections = new QCheckBox("Protéger le header contre les inclusions multiples");
     protections->setChecked(true);
     headerGuard = new QLineEdit; // headerGuard sert à afficher en temps réel le header guard
-    genererConstructeur = new QCheckBox("Générer un &constructeur par défaut");
-    genererDestructeur = new QCheckBox("Générer un &destructeur");
+    genererConstructeur = new QCheckBox("Générer un &constructeur par défaut.");
+    genererDestructeur = new QCheckBox("Générer un &destructeur.");
+    genererAccesseurs = new QCheckBox("Générer les &accesseurs.");
 
     QHBoxLayout *headerLayout = new QHBoxLayout; // layout contenant les widgets relatifs au header guard
     headerLayout->addWidget(protections);
@@ -48,6 +49,7 @@ FenPrincipale::FenPrincipale()
     optionsLayout->addLayout(headerLayout);
     optionsLayout->addWidget(genererConstructeur);
     optionsLayout->addWidget(genererDestructeur);
+    optionsLayout->addWidget(genererAccesseurs);
 
     QGroupBox *groupOptions = new QGroupBox;
     groupOptions->setLayout(optionsLayout);
@@ -163,6 +165,7 @@ QString FenPrincipale::genererCodeHeader()
 
     QString texteConstructeur = QString("");
     QString texteDestructeur = QString("");
+    QString texteAccesseurs = QString("");
     if (genererConstructeur->isChecked())
     {
         texteConstructeur = QString(nom->text()+"();");
@@ -172,9 +175,30 @@ QString FenPrincipale::genererCodeHeader()
     {
         texteDestructeur = QString("~"+nom->text()+"();");
     }
+    if (genererAccesseurs->isChecked())
+    {
+        // si la liste des attributs est vide on affiche une erreur
+        if (attributs->count()==0)
+        {
+            QMessageBox::critical(this, "Erreur", "Veuillez entrer au moins un attribut.");
+            return "";
+        }
+        // sinon
+        for (int compteur(0) ; compteur < attributs->count() ; compteur++)
+            {
+                QString typeAttribut(attributs->item(compteur)->text().split(" ").at(0));
+                QString nomAttribut(attributs->item(compteur)->text().split(" ").at(1));
+                QStringRef nomAttribut2(&nomAttribut, 1, nomAttribut.count()-1);
+                texteAccesseurs.append(indentation + typeAttribut + " " + "get"
+                                       + nomAttribut.at(0).toUpper() + nomAttribut2 + "();\n");
+            }
+
+    }
     code.append("{\n");
-    code.append("public: \n" + indentation + texteConstructeur + "\n");
+    code.append("public:\n");
+    code.append(indentation + texteConstructeur + "\n");
     code.append(indentation + texteDestructeur + "\n");
+    code.append(texteAccesseurs);
     code.append("\n");
 
     code.append("protected:\n");
@@ -190,6 +214,7 @@ QString FenPrincipale::genererCodeHeader()
         }
     code.append("\n");
     code.append("};");
+    code.append("\n\n");
 
     if (protections->isChecked())
     {
@@ -229,9 +254,26 @@ QString FenPrincipale::genererCodeCpp()
             QString nomAttribut(attributs->item(compteur)->text().split(" ").at(1));
             code.append(indentation + nomAttribut + " = " + "new " + typeAttribut + ";\n");
         }
-    code.append("\n");
     code.append("};");
+    code.append("\n\n");
 
+    // bloc des getter functions
+    if (genererAccesseurs->isChecked())
+    {
+        QString texteAccesseursCpp(QString(""));
+        for (int compteur(0) ; compteur < attributs->count() ; compteur++)
+            {
+                QString typeAttribut(attributs->item(compteur)->text().split(" ").at(0));
+                QString nomAttribut(attributs->item(compteur)->text().split(" ").at(1));
+                QStringRef nomAttribut2(&nomAttribut, 1, nomAttribut.count()-1);
+                texteAccesseursCpp.append(typeAttribut + " " + nom->text() + "::" + "get"
+                                       + nomAttribut.at(0).toUpper() + nomAttribut2 + "()\n");
+                texteAccesseursCpp.append("{\n");
+                texteAccesseursCpp.append(indentation + "return " + nomAttribut + ";");
+                texteAccesseursCpp.append("\n}\n");
+            }
+        code.append(texteAccesseursCpp);
+    }
     return code;
 }
 

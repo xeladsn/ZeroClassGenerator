@@ -32,6 +32,7 @@ private:
     QLineEdit *headerGuard;
     QCheckBox *genererConstructeur;
     QCheckBox *genererDestructeur;
+    QCheckBox *genererAccesseurs;
     QGroupBox *groupCommentaires;
     QLineEdit *auteur;
     QDateEdit *date;
