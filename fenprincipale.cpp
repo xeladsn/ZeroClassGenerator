@@ -9,9 +9,20 @@ FenPrincipale::FenPrincipale()
 
 
     // Groupe : Définition de la classe
+    // initialisation des attributs
     nom = new QLineEdit;
     classeMere = new QLineEdit;
     attributs = new QListWidget;
+
+    // contrôle de l'input de l'utilisateur
+    // max 20 characters for the input
+    // and ASCII alphanumeric character required
+    QString inputMaskClass(20, *QString("N").data());
+    nom->setInputMask(inputMaskClass);
+    classeMere->setInputMask(inputMaskClass);
+    attributs->setInputMask(inputMaskClass);
+
+    // suite de l'initialisation des attributs
     QLabel *labelAttributs = new QLabel("Attributs");
     ajouterAttributBtn = new QPushButton("&Ajouter");
     supprimerAttributBtn = new QPushButton("&Supprimer");
@@ -63,7 +74,7 @@ FenPrincipale::FenPrincipale()
 
     QFormLayout *commentairesLayout = new QFormLayout;
     commentairesLayout->addRow("&Auteur", auteur);
-    commentairesLayout->addRow("Da&te de création", date);
+    commentairesLayout->addRow("&Date de création", date);
     commentairesLayout->addRow("&Role de la classe", role);
 
     groupCommentaires = new QGroupBox("Ajouter des commentaires");
@@ -111,10 +122,10 @@ void FenPrincipale::ecrireHeaderGuard(QString nom)
 void FenPrincipale::addAttributInList()
 // slot personnalisé pour que l'utilisateur ajoute un attribut à la liste d'attributs
 {
-    QString attributText = QInputDialog::getText(this, tr("Insert attribut"),
-           tr("Input text for the new attribut:"));
-    QString attributType = QInputDialog::getText(this, tr("Insert the type of the attribut"),
-                                                 tr("Input text for the type of the new attribut:"));
+    QString attributText = QInputDialog::getText(this, tr("Nouvel attribut"),
+           tr("Entrez ici votre nouvel attribut:"));
+    QString attributType = QInputDialog::getText(this, tr("Type de l'attribut"),
+                                                 tr("Entrez ici le type du nouvel attribut:"));
     attributs->addItem(attributType + " " + attributText);
 }
 
